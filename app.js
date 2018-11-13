@@ -1,9 +1,7 @@
 class myEventEmitter {
     constructor() {
         this.map = new Map();
-        this._maxListeners = 10;
-        this._eventsCount = 0;
-        this._listenersCount = 0;
+        this._maxListeners = 5;
     }
 
     setMaxListeners(n) {
@@ -16,119 +14,135 @@ class myEventEmitter {
 
     on(eventName, listener) {
         let isFunction = typeof listener === 'function';
-        
-        if(this._listenersCount < this._maxListeners) {
-            if(isFunction) {
-                if(this.map.has(eventName)) {
-                    let listenersObj = this.map.get(eventName);
-                    listenersObj.push({listener: listener});
-                    //this._listenersCount++;
+
+        if(isFunction) {
+
+            if(this.map.has(eventName)) {
+                let funcArr = this.map.get(eventName);
+                if(funcArr.length < this._maxListeners) {
+                    funcArr.push(listener);
                 } else {
-                    this.map.set(eventName, [{listener: listener}]);
-                    //this._listenersCount++;
+                    console.log('you can\'t add function');
                 }
             } else {
-                console.log('listener is not a function');
-                return false;
+                this.map.set(eventName, [listener]);
             }
         } else {
-            console.log('can\'t add listener');
-            return false;
+            console.log('listener is not a function');
         }
     }
 
     addListener(eventName, listener) {
         let isFunction = typeof listener === 'function';
-        
-        if(this._listenersCount < this._maxListeners) {
-            if(isFunction) {
-                if(this.map.has(eventName)) {
-                    let listenersObj = this.map.get(eventName);
-                    listenersObj.push({listener: listener});
-                    //this._listenersCount++;
+
+        if(isFunction) {
+
+            if(this.map.has(eventName)) {
+                let funcArr = this.map.get(eventName);
+                if(funcArr.length < this._maxListeners) {
+                    funcArr.push(listener);
                 } else {
-                    this.map.set(eventName, [{listener: listener}]);
-                    //this._listenersCount++;
+                    console.log('you can\'t add function');
                 }
             } else {
-                console.log('listener is not a function');
-                return false;
+                this.map.set(eventName, [listener]);
             }
         } else {
-            console.log('can\'t add listener');
-            return false;
+            console.log('listener is not a function');
         }
     }
 
     once(eventName, listener) {
         let isFunction = typeof listener === 'function';
-        
-        if(this._listenersCount < this._maxListeners) {
-            if(isFunction) {
-                if(this.map.has(eventName)) {
-                    let listenersObj = this.map.get(eventName);
-                    listenersObj.push({listener: listener, callOnce: true});
-                    //this._listenersCount++;
+        listener.callOnce = true;
+
+        if(isFunction) {
+
+            if(this.map.has(eventName)) {
+                let funcArr = this.map.get(eventName);
+                if(funcArr.length < this._maxListeners) {
+                    funcArr.push(listener);
                 } else {
-                    this.map.set(eventName, [{listener: listener, callOnce: true}]);
-                    //this._listenersCount++;
+                    console.log('you can\'t add function');
                 }
             } else {
-                console.log('listener is not a function');
-                return false;
+                this.map.set(eventName, [listener]);
             }
         } else {
-            console.log('can\'t add listener');
-            return false;
-        }
-       
+            console.log('listener is not a function');
+        }  
     }
 
     emit(eventName) {
-        let listenersArr = this.map.get(eventName);
-        if (listenersArr) {
-            
-            listenersArr.forEach((listener, i) => {
-                listener.listener();
-            });
-            
-            listenersArr = listenersArr.filter(listenerObj => !listenerObj.hasOwnProperty('callOnce'));
-            console.log('listenersArr', listenersArr);
-            this.map.delete(eventName);
-
-            listenersArr.forEach(listener => {
-                if(this.map.has(eventName)) {
-                    let listenersObj = this.map.get(eventName);
-                    listenersObj.push({listener: listener.listener});
-                    //this._listenersCount++;
-                } else {
-                    this.map.set(eventName, [{listener: listener.listener}]);
-                    //this._listenersCount++;
-                }
-            })
-
-            return true;
+        let isExist = this.map.has(eventName);
+        if(isExist) {
+            let funcArr = this.map.get(eventName);
+            funcArr.forEach(func => func());
+            let newFuncArr = funcArr.filter(func => !func.hasOwnProperty('callOnce'));
+            this.map.set(eventName, newFuncArr);
         } else {
-            console.log(`${eventName} does not exist`);
+            console.log('eventName doesn\'t exist');
             return false;
         }
+    }
+
+    removeAllListeners(eventName) {
+        let isExist = this.map.has(eventName);
+        if(isExist) {
+            this.map.delete(eventName);
+        } else {
+            console.log('eventName doesn\'t exist');
+            return false;
+        }
+    }
+
+    eventNames() {
+        let eventNamesArr = [...this.map.keys()];
+        console.log('eventNamesArr', eventNamesArr);
+        return eventNamesArr;
         
     }
+
+    listenerCount(eventName) {
+        let funcArr = this.map.get(eventName);
+        console.log('listenerCount', funcArr.length);
+        return funcArr.length;
+    }
+
+    listeners(eventName) {
+        let funcArr = this.map.get(eventName);
+        console.log('funcArr', funcArr);
+        return funcArr;
+    }
 }
-//------------------------------------------------------
 
 let emitter = new myEventEmitter();
+
+emitter.setMaxListeners(10);
+console.log(emitter);
+
 emitter.on('read', () => console.log('read1'));
 emitter.on('read', () => console.log('read2'));
-emitter.on('call', () => console.log('call'));
-
 emitter.on('sleep', () => console.log('sleep1'));
-emitter.once('sleep', () => console.log('sleepOnce1'));
-emitter.on('sleep', () => console.log('sleep2'));
-emitter.once('sleep', () => console.log('sleepOnce2'));
 
-emitter.emit('sleep');
-console.log(emitter.map.get('sleep'));
+emitter.eventNames();
+emitter.listenerCount('read');
+emitter.listeners('read');
 
-emitter.emit('sleep');
-console.log(emitter.map.get('sleep'));
+
+emitter.on('jump', () => {console.log('jump1')});
+emitter.once('jump', () => {console.log('once jump')});
+// emitter.on('jump', () => {console.log('jump2')});
+console.log(emitter);
+emitter.emit('jump');
+
+// console.log('jump', emitter.map.get('jump'));
+
+// emitter.emit('jump');
+// emitter.on('jump', () => {console.log('jump3')});
+// emitter.removeAllListeners('jump');
+
+// console.log('jump', emitter.map.get('jump'));
+
+
+console.log(emitter);   
